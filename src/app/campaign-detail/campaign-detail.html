@@ -1,0 +1,29 @@
+<div class="campaign-detail">
+    <ng-container *ngIf="campaign$ | async as c; else loading">
+      <header>
+        <h1>{{ c.slug }}</h1>
+        <p>{{ c.caption }}</p>
+      </header>
+  
+      <!-- Thumbnails -->
+      <section class="thumbnails">
+        <img [src]="c.snapThumbnailUrl" alt="Snap thumbnail" />
+        <img [src]="c.fullThumbnailUrl" alt="Full thumbnail" />
+      </section>
+  
+      <!-- Videos -->
+      <section class="videos">
+        <video controls [src]="c.snapVideoUrl"></video>
+        <video controls [src]="c.fullVideoUrl"></video>
+      </section>
+  
+      <!-- Share -->
+      <a [href]="c.waLink" target="_blank" class="btn btn-primary">
+        Share on WhatsApp
+      </a>
+    </ng-container>
+  
+    <ng-template #loading>
+      <p>Loading campaign…</p>
+    </ng-template>
+  </div>

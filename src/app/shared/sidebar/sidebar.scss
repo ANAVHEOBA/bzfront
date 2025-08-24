@@ -1,0 +1,35 @@
+.sidebar {
+    width: 220px;
+    background: #1e293b;
+    color: #fff;
+    height: 100%;        // Change from 100vh to 100%
+    min-height: 100vh;   // Keep this to handle content overflow
+    padding: 1rem;
+    display: flex;          // flex column layout
+    flex-direction: column; // stack children vertically
+  }
+  
+  .sidebar nav {
+    flex: 1;                // nav grows to fill remaining space
+  }
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column; // Stack list items vertically
+    gap: 0.75rem; // Space between list items
+  
+    a {
+      color: #cbd5e1;
+      text-decoration: none;
+      display: block; // Make links fill the whole list item
+      padding: 0.5rem; // Add some padding
+  
+      &:hover,
+      &.active {
+        color: #fff;
+        background-color: #1a2129; // Add a background color on hover for visual feedback
+      }
+    }
+  }

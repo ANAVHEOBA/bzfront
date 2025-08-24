@@ -1,0 +1,97 @@
+<!-- ROOT LAYOUT: sidebar + content -->
+<div class="dashboard-layout">
+  <!-- SIDEBAR -->
+  <app-sidebar></app-sidebar>
+
+  <!-- ORIGINAL DASHBOARD CONTENT -->
+  <div class="dashboard-container">
+
+    <!-- Header -->
+    <header class="dashboard-header">
+      <h1>Campaign Dashboard</h1>
+      <button (click)="logout()" class="btn btn-logout">Logout</button>
+    </header>
+
+    <!-- Notifications -->
+    @if (uploadSuccess) {
+      <div class="notification success">Campaign uploaded successfully!</div>
+    }
+    @if (errorMessage) {
+      <div class="notification error">{{ errorMessage }}</div>
+    }
+
+    <!-- Upload Form -->
+    <div class="card upload-card">
+      <h2>Create New Campaign</h2>
+      <form (ngSubmit)="onSubmit()" class="upload-form">
+        <div class="form-group">
+          <label for="slug">Campaign Slug *</label>
+          <input type="text" id="slug" [(ngModel)]="slug" name="slug" required
+                 placeholder="e.g., summer-sale-2024">
+        </div>
+        <div class="form-group">
+          <label for="waLink">WhatsApp Link *</label>
+          <input type="url" id="waLink" [(ngModel)]="waLink" name="waLink" required
+                 placeholder="https://wa.me/1234567890">
+        </div>
+        <div class="form-group">
+          <label for="caption">Caption *</label>
+          <textarea id="caption" [(ngModel)]="caption" name="caption" required
+                    rows="3" placeholder="Enter campaign description..."></textarea>
+        </div>
+
+        <!-- File Uploads -->
+        <div class="file-upload-group">
+          <div class="file-upload">
+            <label>Preview Image / Video (Small) *</label>
+            <input type="file" accept="image/*,video/*"
+                   (change)="onFileSelected($event, 'preview')" [disabled]="isUploading">
+            <span class="file-name">{{ previewFile?.name || 'No file selected' }}</span>
+            @if (previewUrl) {
+              <div class="image-preview">
+                <img [src]="previewUrl" alt="Preview">
+              </div>
+            }
+          </div>
+          <div class="file-upload">
+            <label>Full Resolution Image / Video *</label>
+            <input type="file" accept="image/*,video/*"
+                   (change)="onFileSelected($event, 'full')" [disabled]="isUploading">
+            <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
+            @if (fullUrl) {
+              <div class="image-preview">
+                <img [src]="fullUrl" alt="Full">
+              </div>
+            }
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="isUploading">
+          @if (isUploading) {
+            <span class="spinner"></span> Uploading...
+          } @else {
+            Upload Campaign
+          }
+        </button>
+      </form>
+    </div>
+
+    <!-- Recent Campaigns (linked thumbnails) -->
+    <div class="card">
+      <h2>Recent Campaigns</h2>
+
+      @if (campaigns.length) {
+        <div class="campaign-grid">
+          @for (c of campaigns; track c.slug) {
+            <a class="campaign-item" [routerLink]="['/campaigns', c.slug]">
+              <img [src]="c.fullThumbnailUrl" [alt]="c.slug" loading="lazy" />
+              <p>{{ c.slug }}</p>
+            </a>
+          }
+        </div>
+      } @else {
+        <p class="empty-state">No campaigns uploaded yet</p>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<div class="viewport">
+  <video
+    #vid
+    class="video"
+    preload="auto"
+    playsinline
+    loop
+    [src]="campaign?.fullVideoUrl"
+  ></video>
+
+  <div class="overlay">
+    <a [href]="campaign?.waLink" target="_blank" class="cta">
+      Send on WhatsApp
+    </a>
+  </div>
+</div>
+
+<!-- skeleton while loading -->
+<div *ngIf="!campaign" class="viewport skeleton">
+  <div class="loader"></div>
+</div>
