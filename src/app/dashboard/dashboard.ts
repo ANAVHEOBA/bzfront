@@ -1,40 +1,38 @@
+// src/app/dashboard/dashboard.ts
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CampaignService } from '../campaign.service';
-import { SidebarComponent } from '../shared/sidebar/sidebar';
+import { CommonModule } from '@angular/common';          // <-- NEW
+import { CampaignService, CampaignDto } from '../campaign.service';
+import { RouterModule } from '@angular/router';
 
-// Minimal interface matching the public-links payload
-interface CampaignSummary {
-  slug: string;
-  fullVideoUrl: string;
-  fullThumbnailUrl: string;
-  waLink: string;
-}
+interface CampaignSummary
+  extends Pick<CampaignDto,
+    'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+  > {}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, SidebarComponent, RouterLink],
+  imports: [FormsModule, RouterModule, CommonModule],   // <-- CommonModule added
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
 export class Dashboard implements OnInit, OnDestroy {
-  // Form fields
   slug = '';
   waLink = '';
+  waButtonLabel = 'Chat on WhatsApp';
   caption = '';
+  popupTriggerType:  'seconds' | 'percent' | null = null;
+  popupTriggerValue: number | null = null;
   previewFile: File | null = null;
   fullFile: File | null = null;
-
   previewUrl: string | null = null;
   fullUrl: string | null = null;
 
   isUploading = false;
   uploadSuccess = false;
   errorMessage = '';
-
-  // Public list
   campaigns: CampaignSummary[] = [];
 
   private campaignSvc = inject(CampaignService);
@@ -51,7 +49,6 @@ export class Dashboard implements OnInit, OnDestroy {
   onFileSelected(event: Event, type: 'preview' | 'full'): void {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0] ?? null;
-
     if (type === 'preview') {
       if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
       this.previewFile = file;
@@ -73,7 +70,16 @@ export class Dashboard implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     this.campaignSvc
-      .upload(this.slug, this.waLink, this.caption, this.previewFile, this.fullFile)
+      .upload(
+        this.slug,
+        this.waLink,
+        this.waButtonLabel,
+        this.caption,
+        this.popupTriggerType,
+        this.popupTriggerValue,
+        this.previewFile,
+        this.fullFile
+      )
       .subscribe({
         next: (newCampaign) => {
           this.isUploading = false;
@@ -83,7 +89,10 @@ export class Dashboard implements OnInit, OnDestroy {
             slug: newCampaign.slug,
             fullVideoUrl: newCampaign.fullVideoUrl,
             fullThumbnailUrl: newCampaign.fullThumbnailUrl,
-            waLink: newCampaign.waLink
+            waLink: newCampaign.waLink,
+            waButtonLabel: newCampaign.waButtonLabel,
+            popupTriggerType:  newCampaign.popupTriggerType,
+            popupTriggerValue: newCampaign.popupTriggerValue
           });
           setTimeout(() => (this.uploadSuccess = false), 3000);
         },
@@ -94,17 +103,27 @@ export class Dashboard implements OnInit, OnDestroy {
       });
   }
 
+  deleteCampaign(slug: string): void {
+    if (!confirm('Delete this campaign?')) return;
+    this.campaignSvc.delete(slug).subscribe({
+      next: () => (this.campaigns = this.campaigns.filter((c) => c.slug !== slug)),
+      error: (err) => alert(err.error?.message || 'Delete failed')
+    });
+  }
+
   private loadCampaigns(): void {
-    this.campaignSvc.listPublicLinks().subscribe(list => (this.campaigns = list));
+    this.campaignSvc.listPublicLinks().subscribe((list) => (this.campaigns = list));
   }
 
   private resetForm(): void {
-    this.slug = this.waLink = this.caption = '';
+    this.slug = this.waLink = this.waButtonLabel = this.caption = '';
+    this.popupTriggerType = null;
+    this.popupTriggerValue = null;
     this.previewFile = this.fullFile = null;
     this.previewUrl = this.fullUrl = null;
     document
       .querySelectorAll<HTMLInputElement>('input[type="file"]')
-      .forEach(el => el.value = '');
+      .forEach((el) => (el.value = ''));
   }
 
   logout(): void {

@@ -1,21 +1,24 @@
-<div class="viewport">
-  <video
-    #vid
-    class="video"
-    preload="auto"
-    playsinline
-    loop
-    [src]="campaign?.fullVideoUrl"
-  ></video>
+<!-- src/app/campaign-landing/campaign-landing.html -->
+<div class="landing-wrapper">
+  <div *ngIf="isLoading">Loading campaign…</div>
+  <div *ngIf="error">{{ error }}</div>
 
-  <div class="overlay">
-    <a [href]="campaign?.waLink" target="_blank" class="cta">
-      Send on WhatsApp
+  <div *ngIf="campaign && !isLoading" class="campaign-card">
+    <h1>{{ campaign.slug }}</h1>
+    <p>{{ campaign.caption }}</p>
+
+    <div class="video-wrapper" (click)="!showFull && switchToFull()">
+      <video
+        [src]="showFull ? campaign.fullVideoUrl : campaign.snapVideoUrl"
+        [poster]="showFull ? campaign.fullThumbnailUrl : campaign.snapThumbnailUrl"
+        controls autoplay muted playsinline preload="metadata">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+    <!-- Dynamic WhatsApp button -->
+    <a class="wa-btn" [href]="campaign.waLink" target="_blank" rel="noopener">
+      {{ campaign.waButtonLabel }}
     </a>
   </div>
-</div>
-
-<!-- skeleton while loading -->
-<div *ngIf="!campaign" class="viewport skeleton">
-  <div class="loader"></div>
 </div>

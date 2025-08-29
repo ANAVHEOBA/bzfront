@@ -12,7 +12,13 @@ export interface CampaignDto {
   snapThumbnailUrl: string;
   fullThumbnailUrl: string;
   waLink: string;
+  waButtonLabel: string;
   caption?: string;
+
+  /* NEW – popup timing */
+  popupTriggerType:  'seconds' | 'percent' | null;
+  popupTriggerValue: number | null;
+
   createdAt?: string;
   updatedAt?: string;
   _id?: string;
@@ -30,7 +36,10 @@ export class CampaignService {
   upload(
     slug: string,
     waLink: string,
+    waButtonLabel: string,
     caption: string,
+    popupTriggerType:  'seconds' | 'percent' | null,
+    popupTriggerValue: number | null,
     preview: File,
     full: File
   ): Observable<CampaignDto> {
@@ -38,7 +47,10 @@ export class CampaignService {
     const form = new FormData();
     form.append('slug', slug);
     form.append('waLink', waLink);
+    form.append('waButtonLabel', waButtonLabel);
     form.append('caption', caption);
+    if (popupTriggerType  !== null) form.append('popupTriggerType',  popupTriggerType);
+    if (popupTriggerValue !== null) form.append('popupTriggerValue', String(popupTriggerValue));
     form.append('preview', preview);
     form.append('full', full);
 
@@ -51,18 +63,32 @@ export class CampaignService {
    * List public campaign links
    * ---------------------------------------------------------- */
   listPublicLinks(): Observable<
-    Pick<CampaignDto, 'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink'>[]
+    Pick<CampaignDto,
+      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+    >[]
   > {
     return this.http.get<
-      Pick<CampaignDto, 'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink'>[]
+      Pick<CampaignDto,
+        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+      >[]
     >(`${this.base}/campaigns/public/links`);
   }
 
   /* ----------------------------------------------------------
-   * NEW: Fetch a single campaign by slug
-   * GET /campaigns/:slug
+   * Fetch a single campaign by slug
    * ---------------------------------------------------------- */
   getCampaign(slug: string): Observable<CampaignDto> {
     return this.http.get<CampaignDto>(`${this.base}/campaigns/${slug}`);
+  }
+
+  /* ----------------------------------------------------------
+   * Delete a campaign by slug
+   * ---------------------------------------------------------- */
+  delete(slug: string): Observable<{ message: string; slug: string }> {
+    const token = localStorage.getItem('auth_token') ?? '';
+    return this.http.delete<{ message: string; slug: string }>(
+      `${this.base}/campaigns/${slug}`,
+      { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+    );
   }
 }

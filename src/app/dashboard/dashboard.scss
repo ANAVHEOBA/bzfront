@@ -1,6 +1,6 @@
 @use 'sass:color';
 
-// ----- Variables -----
+// ---------- Variables ----------
 $primary-color: #4361ee;
 $success-color: #06d6a0;
 $error-color: #ef476f;
@@ -12,11 +12,18 @@ $text-color: #212529;
 $card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 $border-radius: 8px;
 
-// ----- Layout -----
+// ---------- Layout ----------
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .dashboard-container {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
+  flex: 1;
+  overflow: auto;
+  padding: 1.5rem;
+  background: #f8f9fa;
 }
 
 .dashboard-header {
@@ -26,15 +33,10 @@ $border-radius: 8px;
   margin-bottom: 2rem;
   border-bottom: 1px solid $gray-300;
   padding-bottom: 1rem;
-
-  h1 {
-    margin: 0;
-    font-size: 1.8rem;
-    color: $text-color;
-  }
+  h1 { margin: 0; font-size: 1.8rem; color: $text-color; }
 }
 
-// ----- Buttons -----
+// ---------- Buttons ----------
 .btn {
   padding: 0.6rem 1.2rem;
   border: none;
@@ -42,80 +44,38 @@ $border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
+.btn-logout  { background: $gray-200; color: $gray-700; &:hover { background: $gray-300; } }
+.btn-primary { background: $primary-color; color: #fff; &:hover { background: color.adjust($primary-color, $lightness: -8%); } }
+.btn-danger  { background: $error-color; color: #fff; font-size: 0.8rem; margin-top: 0.5rem; }
 
-.btn-logout {
-  background: $gray-200;
-  color: $gray-700;
-
-  &:hover:not(:disabled) {
-    background: $gray-300;
-  }
-}
-
-.btn-primary {
-  grid-column: 1 / -1;
-  background: $primary-color;
-  color: #fff;
-  padding: 0.8rem;
-  font-size: 1.1rem;
-
-  &:hover:not(:disabled) {
-    background: color.adjust($primary-color, $lightness: -8%);
-  }
-
-  &:active:not(:disabled) {
-    background: color.adjust($primary-color, $lightness: -12%);
-  }
-}
-
-// ----- Cards -----
+// ---------- Cards ----------
 .card {
   background: #fff;
   border-radius: $border-radius;
   box-shadow: $card-shadow;
   padding: 1.8rem;
   margin-bottom: 2rem;
-
-  h2 {
-    margin: 0 0 1rem;
-    font-size: 1.4rem;
-    color: $text-color;
-  }
+  h2 { margin: 0 0 1rem; font-size: 1.4rem; color: $text-color; }
 }
 
-// ----- Forms -----
+// ---------- Forms ----------
 .upload-form {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
 }
-
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
-  label {
-    font-weight: 500;
-    color: $gray-700;
-  }
-
+  label { font-weight: 500; color: $gray-700; }
   input, textarea {
     padding: 0.8rem;
     border: 1px solid $gray-300;
     border-radius: $border-radius;
     font-size: 1rem;
-
     &:focus {
       outline: none;
       border-color: $primary-color;
@@ -124,84 +84,38 @@ $border-radius: 8px;
   }
 }
 
-// ----- File Uploads -----
+// ---------- File Uploads ----------
 .file-upload-group {
-  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
 }
-
 .file-upload {
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: $gray-700;
-  }
-
-  input[type="file"] {
-    width: 100%;
-    padding: 0.6rem;
-    border: 1px solid $gray-300;
-    border-radius: $border-radius;
-    background: $gray-100;
-  }
-
-  .file-name {
-    display: block;
-    margin-top: 0.5rem;
-    padding: 0.6rem;
-    background: $gray-100;
-    border-radius: $border-radius;
-    font-size: 0.9rem;
-    color: $gray-700;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
+  label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: $gray-700; }
+  input[type="file"] { width: 100%; padding: 0.6rem; border: 1px solid $gray-300; border-radius: $border-radius; background: $gray-100; }
+  .file-name { display: block; margin-top: 0.5rem; padding: 0.6rem; background: $gray-100; border-radius: $border-radius; font-size: 0.9rem; color: $gray-700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .image-preview {
     margin-top: 1rem;
     aspect-ratio: 16 / 9;
     border-radius: $border-radius;
     overflow: hidden;
     background: $gray-100;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    img { width: 100%; height: 100%; object-fit: cover; }
   }
 }
 
-// ----- Notifications -----
+// ---------- Notifications ----------
 .notification {
   padding: 1rem;
   margin-bottom: 1.5rem;
   border-left: 4px solid;
   border-radius: $border-radius;
   font-weight: 500;
-
-  &.success {
-    background: rgba($success-color, 0.15);
-    color: color.adjust($success-color, $lightness: -10%);
-    border-color: $success-color;
-  }
-
-  &.error {
-    background: rgba($error-color, 0.15);
-    color: color.adjust($error-color, $lightness: -10%);
-    border-color: $error-color;
-  }
+  &.success { background: rgba($success-color, 0.15); color: color.adjust($success-color, $lightness: -10%); border-color: $success-color; }
+  &.error   { background: rgba($error-color, 0.15); color: color.adjust($error-color, $lightness: -10%); border-color: $error-color; }
 }
 
-// ----- Spinner -----
+// ---------- Spinner ----------
 .spinner {
   display: inline-block;
   width: 16px;
@@ -213,97 +127,22 @@ $border-radius: 8px;
   margin-right: 8px;
   vertical-align: middle;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+// ---------- Placeholder ----------
+.empty-state { text-align: center; color: $gray-700; font-style: italic; padding: 2rem 0; margin: 0; }
 
-// ----- Placeholder -----
-.empty-state {
-  text-align: center;
-  color: $gray-700;
-  font-style: italic;
-  padding: 2rem 0;
-  margin: 0;
-}
-
-
-// ---------- Sidebar Layout ----------
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-// Sidebar width is left to SidebarComponent itself
-.dashboard-container {
-  flex: 1;
-  overflow: auto;
-  padding: 1.5rem;
-  background: #f8f9fa;   // optional light background
-}
-
-// Ensure the inner container doesn't get its own max-width
-.dashboard-container {
-  max-width: none;
-  margin: 0;
-}
-
-
-
-// ----- Thumbnail grid -----
+// ---------- Thumbnail Grid ----------
 .campaign-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1rem;
 }
-
 .campaign-item {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
   overflow: hidden;
   text-align: center;
-
-  img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-  }
-
-  p {
-    padding: 0.5rem;
-    margin: 0;
-    font-size: 0.9rem;
-    color: #495057;
-  }
-}
-
-
-
-// ----- Thumbnail grid -----
-.campaign-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
-.campaign-item {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-  text-align: center;
-
-  img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-  }
-
-  p {
-    padding: 0.5rem;
-    margin: 0;
-    font-size: 0.9rem;
-    color: #495057;
-  }
+  img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  p { padding: 0.5rem; margin: 0; font-size: 0.9rem; color: $gray-700; }
 }

@@ -1,18 +1,11 @@
-<!-- ROOT LAYOUT: sidebar + content -->
+<!-- src/app/dashboard/dashboard.html -->
 <div class="dashboard-layout">
-  <!-- SIDEBAR -->
-  <app-sidebar></app-sidebar>
-
-  <!-- ORIGINAL DASHBOARD CONTENT -->
   <div class="dashboard-container">
-
-    <!-- Header -->
     <header class="dashboard-header">
       <h1>Campaign Dashboard</h1>
       <button (click)="logout()" class="btn btn-logout">Logout</button>
     </header>
 
-    <!-- Notifications -->
     @if (uploadSuccess) {
       <div class="notification success">Campaign uploaded successfully!</div>
     }
@@ -29,16 +22,47 @@
           <input type="text" id="slug" [(ngModel)]="slug" name="slug" required
                  placeholder="e.g., summer-sale-2024">
         </div>
+
         <div class="form-group">
           <label for="waLink">WhatsApp Link *</label>
           <input type="url" id="waLink" [(ngModel)]="waLink" name="waLink" required
                  placeholder="https://wa.me/1234567890">
         </div>
+
+        <div class="form-group">
+          <label for="waButtonLabel">WhatsApp Button Text *</label>
+          <input type="text" id="waButtonLabel" [(ngModel)]="waButtonLabel"
+                 name="waButtonLabel" required placeholder="e.g., Order on WhatsApp">
+        </div>
+
         <div class="form-group">
           <label for="caption">Caption *</label>
           <textarea id="caption" [(ngModel)]="caption" name="caption" required
                     rows="3" placeholder="Enter campaign description..."></textarea>
         </div>
+
+        <!-- NEW: Popup Timing -->
+        <div class="form-group">
+          <label for="popupTriggerType">Popup Trigger</label>
+          <select id="popupTriggerType" [(ngModel)]="popupTriggerType" name="popupTriggerType">
+            <option [ngValue]="null">— None —</option>
+            <option value="seconds">After seconds</option>
+            <option value="percent">At % of video</option>
+          </select>
+        </div>
+
+        @if (popupTriggerType) {
+          <div class="form-group">
+            <label for="popupTriggerValue">
+              {{ popupTriggerType === 'seconds' ? 'Seconds' : 'Percent (0-100)' }}
+            </label>
+            <input type="number" id="popupTriggerValue"
+                   [(ngModel)]="popupTriggerValue" name="popupTriggerValue"
+                   min="0"
+                   [max]="popupTriggerType === 'percent' ? 100 : 9999"
+                   placeholder="e.g., 8">
+          </div>
+        }
 
         <!-- File Uploads -->
         <div class="file-upload-group">
@@ -53,6 +77,7 @@
               </div>
             }
           </div>
+
           <div class="file-upload">
             <label>Full Resolution Image / Video *</label>
             <input type="file" accept="image/*,video/*"
@@ -76,17 +101,19 @@
       </form>
     </div>
 
-    <!-- Recent Campaigns (linked thumbnails) -->
+    <!-- Recent Campaigns -->
     <div class="card">
       <h2>Recent Campaigns</h2>
-
       @if (campaigns.length) {
         <div class="campaign-grid">
           @for (c of campaigns; track c.slug) {
-            <a class="campaign-item" [routerLink]="['/campaigns', c.slug]">
-              <img [src]="c.fullThumbnailUrl" [alt]="c.slug" loading="lazy" />
+            <div class="campaign-item">
+              <a [routerLink]="['/campaigns', c.slug]">
+                <img [src]="c.fullThumbnailUrl" [alt]="c.slug" loading="lazy" />
+              </a>
               <p>{{ c.slug }}</p>
-            </a>
+              <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
+            </div>
           }
         </div>
       } @else {
