@@ -1,4 +1,3 @@
-<!-- src/app/dashboard/dashboard.html -->
 <div class="dashboard-layout">
   <div class="dashboard-container">
     <header class="dashboard-header">
@@ -41,7 +40,7 @@
                     rows="3" placeholder="Enter campaign description..."></textarea>
         </div>
 
-        <!-- NEW: Popup Timing -->
+        <!-- Popup Timing -->
         <div class="form-group">
           <label for="popupTriggerType">Popup Trigger</label>
           <select id="popupTriggerType" [(ngModel)]="popupTriggerType" name="popupTriggerType">
@@ -112,7 +111,65 @@
                 <img [src]="c.fullThumbnailUrl" [alt]="c.slug" loading="lazy" />
               </a>
               <p>{{ c.slug }}</p>
+
+              <!-- Delete / Edit -->
               <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
+              <button class="btn btn-secondary" (click)="openEdit(c)">Edit</button>
+
+              <!-- Inline Edit Panel -->
+              @if (editingSlug === c.slug) {
+                <div class="edit-panel">
+                  <h4>Edit {{ c.slug }}</h4>
+
+                  <label>Slug</label>
+                  <input [(ngModel)]="editForm.slug" name="editSlug" />
+
+                  <label>Caption</label>
+                  <textarea [(ngModel)]="editForm.caption" rows="2"></textarea>
+
+                  <label>WhatsApp Link</label>
+                  <input [(ngModel)]="editForm.waLink" name="editWaLink" />
+
+                  <label>WhatsApp Button Text</label>
+                  <input [(ngModel)]="editForm.waButtonLabel" />
+
+                  <label>Popup Trigger</label>
+                  <select [(ngModel)]="editForm.popupTriggerType">
+                    <option [ngValue]="null">None</option>
+                    <option value="seconds">Seconds</option>
+                    <option value="percent">Percent</option>
+                  </select>
+
+                  @if (editForm.popupTriggerType) {
+                    <label>Value</label>
+                    <input type="number" [(ngModel)]="editForm.popupTriggerValue" />
+                  }
+
+                  <label>
+                    Replace Preview
+                    <input type="file" accept="image/*,video/*"
+                           (change)="onEditFile($event, 'preview')" />
+                  </label>
+
+                  <label>
+                    Replace Full
+                    <input type="file" accept="image/*,video/*"
+                           (change)="onEditFile($event, 'full')" />
+                  </label>
+
+                  <div class="edit-actions">
+                    <button class="btn btn-primary" [disabled]="isSaving"
+                            (click)="saveEdit()">
+                      {{ isSaving ? 'Saving...' : 'Save' }}
+                    </button>
+                    <button class="btn btn-outline" (click)="cancelEdit()">Cancel</button>
+                  </div>
+
+                  @if (editError) {
+                    <div class="notification error">{{ editError }}</div>
+                  }
+                </div>
+              }
             </div>
           }
         </div>

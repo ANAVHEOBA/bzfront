@@ -93,30 +93,51 @@ export class CampaignService {
   }
 
 
-
-  /* ----------------------------------------------------------
- * Partial or full update of an existing campaign
- * ----------------------------------------------------------
- * body: any subset of CampaignDto
- * files: optional preview & full videos
- * ---------------------------------------------------------- */
-patch(
+  /* ---------- NEW METHOD ---------- */
+/**
+ * Update an existing campaign.
+ * - If you omit `preview` and `full` the call is sent as JSON
+ *   (ideal for small text changes).
+ * - If you supply `preview` and/or `full` the call is sent as
+ *   multipart/form-data so the videos are replaced.
+ */
+update(
   slug: string,
-  body: Partial<CampaignDto>,
+  changes: Partial<
+    Pick<
+      CampaignDto,
+      | 'slug'
+      | 'waLink'
+      | 'waButtonLabel'
+      | 'caption'
+      | 'popupTriggerType'
+      | 'popupTriggerValue'
+    >
+  >,
   preview?: File,
   full?: File
 ): Observable<CampaignDto> {
   const token = localStorage.getItem('auth_token') ?? '';
+
+  /* ---------- JSON only ---------- */
+  if (!preview && !full) {
+    return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, changes, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      })
+    });
+  }
+
+  /* ---------- Form-data (videos may be replaced) ---------- */
   const form = new FormData();
-
-  // 1. Add text fields
-  Object.entries(body).forEach(([k, v]) => {
-    if (v != null) form.append(k, String(v));
+  Object.entries(changes).forEach(([k, v]) => {
+    if (v !== null && v !== undefined) {
+      form.append(k, v.toString());
+    }
   });
-
-  // 2. Optional files
   if (preview) form.append('preview', preview);
-  if (full)    form.append('full',    full);
+  if (full) form.append('full', full);
 
   return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, form, {
     headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
