@@ -46,34 +46,25 @@ $border-radius: 8px;
   transition: background-color 0.2s;
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
-.btn-logout  { background: $gray-200; color: $gray-700; &:hover { background: color.adjust($gray-200, $lightness: -8%); } }
+.btn-logout  { background: $gray-200; color: $gray-700; &:hover { background: $gray-300; } }
 .btn-primary { background: $primary-color; color: #fff; &:hover { background: color.adjust($primary-color, $lightness: -8%); } }
-.btn-danger  { background: $error-color; color: #fff; font-size: 0.8rem; margin-top: 0.5rem; } 
-.btn-secondary { background: $gray-200; color: $gray-700; &:hover { background: $gray-300; } }
-.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.75rem; border-radius: 6px; }
+.btn-danger  { background: $error-color; color: #fff; font-size: 0.8rem; margin-top: 0.5rem; }
 
 // ---------- Cards ----------
 .card {
-    background: #fff;
-    border-radius: $border-radius;
-    box-shadow: $card-shadow;
-    padding: 1.8rem;
-    margin-bottom: 2rem;
-    h2 { margin: 0 0 1rem; font-size: 1.4rem; color: $text-color; }
-}
-
-.edit-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 1rem;
+  background: #fff;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: 1.8rem;
+  margin-bottom: 2rem;
+  h2 { margin: 0 0 1rem; font-size: 1.4rem; color: $text-color; }
 }
 
 // ---------- Forms ----------
 .upload-form {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 .form-group {
   display: flex;

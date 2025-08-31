@@ -64,12 +64,12 @@ export class CampaignService {
    * ---------------------------------------------------------- */
   listPublicLinks(): Observable<
     Pick<CampaignDto,
-      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'snapThumbnailUrl' | 'caption'
+      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
     >[]
   > {
     return this.http.get<
       Pick<CampaignDto,
-        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'snapThumbnailUrl' | 'caption'
+        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
       >[]
     >(`${this.base}/campaigns/public/links`);
   }

@@ -2,19 +2,19 @@
 import { Component, inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';          // <-- NEW
 import { CampaignService, CampaignDto } from '../campaign.service';
 import { RouterModule } from '@angular/router';
 
 interface CampaignSummary
   extends Pick<CampaignDto,
-    'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'caption' | 'snapThumbnailUrl' | 'fullThumbnailUrl'
+    'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
   > {}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, RouterModule, CommonModule],
+  imports: [FormsModule, RouterModule, CommonModule],   // <-- CommonModule added
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
@@ -35,18 +35,15 @@ export class Dashboard implements OnInit, OnDestroy {
   errorMessage = '';
   campaigns: CampaignSummary[] = [];
 
-  isEditing = false;
-  currentEditSlug: string | null = null;
-
   private campaignSvc = inject(CampaignService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      if (!localStorage.getItem('auth_token')) {
-        this.router.navigate(['/login']);
-        return;
+    if (!localStorage.getItem('auth_token')) {
+      this.router.navigate(['/login']);
+      return;
       }
     }
     this.loadCampaigns();
@@ -67,14 +64,6 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    if (this.isEditing) {
-      this.onUpdate();
-    } else {
-      this.onCreate();
-    }
-  }
-
-  onCreate(): void {
     if (!this.slug || !this.waLink || !this.caption || !this.previewFile || !this.fullFile) {
       this.errorMessage = 'All fields and files are required.';
       return;
@@ -106,9 +95,7 @@ export class Dashboard implements OnInit, OnDestroy {
             waLink: newCampaign.waLink,
             waButtonLabel: newCampaign.waButtonLabel,
             popupTriggerType:  newCampaign.popupTriggerType,
-            popupTriggerValue: newCampaign.popupTriggerValue,
-            caption: newCampaign.caption,
-            snapThumbnailUrl: newCampaign.snapThumbnailUrl  // Include snapThumbnailUrl here
+            popupTriggerValue: newCampaign.popupTriggerValue
           });
           setTimeout(() => (this.uploadSuccess = false), 3000);
         },
@@ -117,70 +104,6 @@ export class Dashboard implements OnInit, OnDestroy {
           this.errorMessage = err.error?.message || 'Upload failed.';
         }
       });
-  }
-
-  onUpdate(): void {
-    if (!this.currentEditSlug || !this.waLink || !this.caption) {
-      this.errorMessage = 'Slug, WhatsApp Link, and Caption are required for update.';
-      return;
-    }
-
-    this.isUploading = true;
-    this.errorMessage = '';
-
-    const body: Partial<CampaignDto> = {
-      waLink: this.waLink,
-      waButtonLabel: this.waButtonLabel,
-      caption: this.caption,
-      popupTriggerType: this.popupTriggerType,
-      popupTriggerValue: this.popupTriggerValue
-    };
-
-    this.campaignSvc
-      .patch(this.currentEditSlug, body, this.previewFile ?? undefined, this.fullFile ?? undefined)
-      .subscribe({
-        next: (updatedCampaign) => {
-          this.isUploading = false;
-          this.uploadSuccess = true;
-          this.resetForm();
-          this.campaigns = this.campaigns.map((c) =>
-            c.slug === updatedCampaign.slug ? { ...c, ...updatedCampaign } : c
-          );
-          this.cancelEdit();
-          setTimeout(() => (this.uploadSuccess = false), 3000);
-        },
-        error: (err) => {
-          this.isUploading = false;
-          this.errorMessage = err.error?.message || 'Update failed.';
-        }
-      });
-  }
-
-  editCampaign(campaign: CampaignSummary): void {
-    this.isEditing = true;
-    this.currentEditSlug = campaign.slug;
-    this.slug = campaign.slug;
-    this.waLink = campaign.waLink;
-    this.waButtonLabel = campaign.waButtonLabel;
-    this.caption = campaign.caption || ''; // Ensure caption is not undefined
-    this.popupTriggerType = campaign.popupTriggerType;
-    this.popupTriggerValue = campaign.popupTriggerValue;
-
-    // Clear file inputs for new uploads, but keep old URLs for display if no new file is selected
-    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-    if (this.fullUrl) URL.revokeObjectURL(this.fullUrl);
-    this.previewFile = null;
-    this.fullFile = null;
-    this.previewUrl = campaign.snapThumbnailUrl || null; // Use thumbnail as preview of existing video
-    this.fullUrl = campaign.fullThumbnailUrl || null; // Use thumbnail as preview of existing video
-
-    document.getElementById('upload-form-title')?.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  cancelEdit(): void {
-    this.isEditing = false;
-    this.currentEditSlug = null;
-    this.resetForm();
   }
 
   deleteCampaign(slug: string): void {
@@ -196,16 +119,11 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   private resetForm(): void {
-    this.slug = '';
-    this.waLink = '';
-    this.waButtonLabel = 'Chat on WhatsApp';
-    this.caption = '';
+    this.slug = this.waLink = this.waButtonLabel = this.caption = '';
     this.popupTriggerType = null;
     this.popupTriggerValue = null;
-    this.previewFile = null;
-    this.fullFile = null;
-    this.previewUrl = null;
-    this.fullUrl = null;
+    this.previewFile = this.fullFile = null;
+    this.previewUrl = this.fullUrl = null;
     document
       .querySelectorAll<HTMLInputElement>('input[type="file"]')
       .forEach((el) => (el.value = ''));
@@ -213,7 +131,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_token');
     }
     this.router.navigate(['/login']);
   }
