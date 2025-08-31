@@ -1,4 +1,3 @@
-<!-- src/app/campaign-landing/campaign-landing.html -->
 <div class="landing-wrapper">
   <div *ngIf="isLoading">Loading campaign…</div>
   <div *ngIf="error">{{ error }}</div>
@@ -11,7 +10,10 @@
       <video
         [src]="showFull ? campaign.fullVideoUrl : campaign.snapVideoUrl"
         [poster]="showFull ? campaign.fullThumbnailUrl : campaign.snapThumbnailUrl"
-        controls autoplay muted playsinline preload="metadata">
+        controls
+        autoplay
+        playsinline
+        preload="metadata">
         Your browser does not support the video tag.
       </video>
     </div>

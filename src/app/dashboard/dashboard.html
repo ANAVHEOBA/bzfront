@@ -15,12 +15,12 @@
 
     <!-- Upload Form -->
     <div class="card upload-card">
-      <h2>Create New Campaign</h2>
+      <h2 id="upload-form-title">{{ isEditing ? 'Edit Campaign' : 'Create New Campaign' }}</h2>
       <form (ngSubmit)="onSubmit()" class="upload-form">
         <div class="form-group">
           <label for="slug">Campaign Slug *</label>
           <input type="text" id="slug" [(ngModel)]="slug" name="slug" required
-                 placeholder="e.g., summer-sale-2024">
+                 placeholder="e.g., summer-sale-2024" [disabled]="isEditing">
         </div>
 
         <div class="form-group">
@@ -70,8 +70,8 @@
             <label>Preview Image / Video (Small) *</label>
             <input type="file" accept="image/*,video/*"
                    (change)="onFileSelected($event, 'preview')" [disabled]="isUploading">
-            <span class="file-name">{{ previewFile?.name || 'No file selected' }}</span>
-            @if (previewUrl) {
+            <span class="file-name">{{ previewFile?.name || (isEditing && previewUrl ? 'Existing File' : 'No file selected') }}</span>
+            @if (previewUrl && (!previewFile || isEditing)) {
               <div class="image-preview">
                 <img [src]="previewUrl" alt="Preview">
               </div>
@@ -82,8 +82,8 @@
             <label>Full Resolution Image / Video *</label>
             <input type="file" accept="image/*,video/*"
                    (change)="onFileSelected($event, 'full')" [disabled]="isUploading">
-            <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
-            @if (fullUrl) {
+            <span class="file-name">{{ fullFile?.name || (isEditing && fullUrl ? 'Existing File' : 'No file selected') }}</span>
+            @if (fullUrl && (!fullFile || isEditing)) {
               <div class="image-preview">
                 <img [src]="fullUrl" alt="Full">
               </div>
@@ -91,13 +91,28 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" [disabled]="isUploading">
-          @if (isUploading) {
-            <span class="spinner"></span> Uploading...
-          } @else {
-            Upload Campaign
-          }
-        </button>
+        @if (isEditing) {
+          <div class="edit-buttons">
+            <button type="submit" class="btn btn-primary" [disabled]="isUploading">
+              @if (isUploading) {
+                <span class="spinner"></span> Updating...
+              } @else {
+                Update Campaign
+              }
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelEdit()" [disabled]="isUploading">
+              Cancel
+            </button>
+          </div>
+        } @else {
+          <button type="submit" class="btn btn-primary" [disabled]="isUploading">
+            @if (isUploading) {
+              <span class="spinner"></span> Uploading...
+            } @else {
+              Upload Campaign
+            }
+          </button>
+        }
       </form>
     </div>
 
@@ -112,7 +127,10 @@
                 <img [src]="c.fullThumbnailUrl" [alt]="c.slug" loading="lazy" />
               </a>
               <p>{{ c.slug }}</p>
-              <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
+              <div class="campaign-actions">
+                <button class="btn btn-secondary btn-sm" (click)="editCampaign(c)">Edit</button>
+                <button class="btn btn-danger btn-sm" (click)="deleteCampaign(c.slug)">Delete</button>
+              </div>
             </div>
           }
         </div>

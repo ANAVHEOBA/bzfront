@@ -64,12 +64,12 @@ export class CampaignService {
    * ---------------------------------------------------------- */
   listPublicLinks(): Observable<
     Pick<CampaignDto,
-      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'snapThumbnailUrl' | 'caption'
     >[]
   > {
     return this.http.get<
       Pick<CampaignDto,
-        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'snapThumbnailUrl' | 'caption'
       >[]
     >(`${this.base}/campaigns/public/links`);
   }
@@ -91,4 +91,35 @@ export class CampaignService {
       { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
     );
   }
+
+
+
+  /* ----------------------------------------------------------
+ * Partial or full update of an existing campaign
+ * ----------------------------------------------------------
+ * body: any subset of CampaignDto
+ * files: optional preview & full videos
+ * ---------------------------------------------------------- */
+patch(
+  slug: string,
+  body: Partial<CampaignDto>,
+  preview?: File,
+  full?: File
+): Observable<CampaignDto> {
+  const token = localStorage.getItem('auth_token') ?? '';
+  const form = new FormData();
+
+  // 1. Add text fields
+  Object.entries(body).forEach(([k, v]) => {
+    if (v != null) form.append(k, String(v));
+  });
+
+  // 2. Optional files
+  if (preview) form.append('preview', preview);
+  if (full)    form.append('full',    full);
+
+  return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, form, {
+    headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
+  });
+}
 }

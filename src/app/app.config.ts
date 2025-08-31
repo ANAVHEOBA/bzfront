@@ -1,11 +1,13 @@
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { routes } from './app.routes';
+import { provideClientHydration, withNoHttpTransferCache } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
-    provideHttpClient()
+    provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(withFetch()),
+    provideClientHydration(withNoHttpTransferCache())
   ]
 };

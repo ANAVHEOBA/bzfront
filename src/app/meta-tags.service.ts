@@ -15,5 +15,6 @@ export class MetaTagsService {
     this.meta.updateTag({ name: 'twitter:title', content: c.title });
     this.meta.updateTag({ name: 'twitter:description', content: c.description });
     this.meta.updateTag({ name: 'twitter:image', content: c.image });
+    this.meta.updateTag({ name: 'twitter:url', content: c.url });
   }
 }
