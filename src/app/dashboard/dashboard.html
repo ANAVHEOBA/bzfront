@@ -65,17 +65,7 @@
 
         <!-- File Uploads -->
         <div class="file-upload-group">
-          <div class="file-upload">
-            <label>Preview Image / Video (Small) *</label>
-            <input type="file" accept="image/*,video/*"
-                   (change)="onFileSelected($event, 'preview')" [disabled]="isUploading">
-            <span class="file-name">{{ previewFile?.name || 'No file selected' }}</span>
-            @if (previewUrl) {
-              <div class="image-preview">
-                <img [src]="previewUrl" alt="Preview">
-              </div>
-            }
-          </div>
+          
 
           <div class="file-upload">
             <label>Full Resolution Image / Video *</label>

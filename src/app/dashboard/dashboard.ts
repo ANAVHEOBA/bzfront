@@ -101,7 +101,6 @@ export class Dashboard implements OnInit, OnDestroy {
         this.caption,
         this.popupTriggerType,
         this.popupTriggerValue,
-        this.previewFile,
         this.fullFile
       )
       .subscribe({
@@ -175,7 +174,6 @@ export class Dashboard implements OnInit, OnDestroy {
       .update(
         this.editingSlug,
         this.editForm,
-        this.editFiles.preview,
         this.editFiles.full
       )
       .subscribe({

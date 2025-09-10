@@ -7,21 +7,23 @@ import { environment } from '../environments/environment';
 /* ---------- Interfaces ---------- */
 export interface CampaignDto {
   slug: string;
-  snapVideoUrl: string;
   fullVideoUrl: string;
-  snapThumbnailUrl: string;
   fullThumbnailUrl: string;
   waLink: string;
   waButtonLabel: string;
   caption?: string;
 
-  /* NEW – popup timing */
+  /* popup timing */
   popupTriggerType:  'seconds' | 'percent' | null;
   popupTriggerValue: number | null;
 
   createdAt?: string;
   updatedAt?: string;
   _id?: string;
+
+  /* legacy fields – no longer returned by backend */
+  snapVideoUrl?: string;
+  snapThumbnailUrl?: string;
 }
 
 /* ---------- Service ---------- */
@@ -31,7 +33,7 @@ export class CampaignService {
   private base = environment.apiUrl;
 
   /* ----------------------------------------------------------
-   * Upload a new campaign
+   * Upload a new campaign – single full video only
    * ---------------------------------------------------------- */
   upload(
     slug: string,
@@ -40,7 +42,6 @@ export class CampaignService {
     caption: string,
     popupTriggerType:  'seconds' | 'percent' | null,
     popupTriggerValue: number | null,
-    preview: File,
     full: File
   ): Observable<CampaignDto> {
     const token = localStorage.getItem('auth_token') ?? '';
@@ -51,7 +52,6 @@ export class CampaignService {
     form.append('caption', caption);
     if (popupTriggerType  !== null) form.append('popupTriggerType',  popupTriggerType);
     if (popupTriggerValue !== null) form.append('popupTriggerValue', String(popupTriggerValue));
-    form.append('preview', preview);
     form.append('full', full);
 
     return this.http.post<CampaignDto>(`${this.base}/campaigns/upload`, form, {
@@ -92,55 +92,45 @@ export class CampaignService {
     );
   }
 
+  /* ----------------------------------------------------------
+   * Update an existing campaign
+   * ---------------------------------------------------------- */
+  update(
+    slug: string,
+    changes: Partial<
+      Pick<
+        CampaignDto,
+        | 'slug'
+        | 'waLink'
+        | 'waButtonLabel'
+        | 'caption'
+        | 'popupTriggerType'
+        | 'popupTriggerValue'
+      >
+    >,
+    full?: File
+  ): Observable<CampaignDto> {
+    const token = localStorage.getItem('auth_token') ?? '';
 
-  /* ---------- NEW METHOD ---------- */
-/**
- * Update an existing campaign.
- * - If you omit `preview` and `full` the call is sent as JSON
- *   (ideal for small text changes).
- * - If you supply `preview` and/or `full` the call is sent as
- *   multipart/form-data so the videos are replaced.
- */
-update(
-  slug: string,
-  changes: Partial<
-    Pick<
-      CampaignDto,
-      | 'slug'
-      | 'waLink'
-      | 'waButtonLabel'
-      | 'caption'
-      | 'popupTriggerType'
-      | 'popupTriggerValue'
-    >
-  >,
-  preview?: File,
-  full?: File
-): Observable<CampaignDto> {
-  const token = localStorage.getItem('auth_token') ?? '';
+    /* JSON only */
+    if (!full) {
+      return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, changes, {
+        headers: new HttpHeaders({
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        })
+      });
+    }
 
-  /* ---------- JSON only ---------- */
-  if (!preview && !full) {
-    return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, changes, {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      })
+    /* Form-data with video replacement */
+    const form = new FormData();
+    Object.entries(changes).forEach(([k, v]) => {
+      if (v !== null && v !== undefined) form.append(k, v.toString());
+    });
+    form.append('full', full);
+
+    return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, form, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
     });
   }
-
-  /* ---------- Form-data (videos may be replaced) ---------- */
-  const form = new FormData();
-  Object.entries(changes).forEach(([k, v]) => {
-    if (v !== null && v !== undefined) {
-      form.append(k, v.toString());
-    }
-  });
-  if (preview) form.append('preview', preview);
-  if (full) form.append('full', full);
-
-  return this.http.put<CampaignDto>(`${this.base}/campaigns/${slug}`, form, {
-    headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
-  });
-}
 }
