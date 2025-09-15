@@ -1,21 +1,22 @@
-import { Component, inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { CampaignService, CampaignDto } from '../campaign.service';
 import { RouterModule } from '@angular/router';
+import { HttpEvent, HttpEventType } from '@angular/common/http';
 
-interface CampaignSummary
-  extends Pick<CampaignDto,
-    | 'slug'
-    | 'fullVideoUrl'
-    | 'fullThumbnailUrl'
-    | 'waLink'
-    | 'waButtonLabel'
-    | 'popupTriggerType'
-    | 'popupTriggerValue'
-    | 'caption'
-  > {}
+interface CampaignSummary extends Pick<CampaignDto, 'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'caption'> {}
+
+// ADD THIS INTERFACE
+interface EditForm {
+  slug: string;
+  caption: string;
+  waLink: string;
+  waButtonLabel: string;
+  popupTriggerType: 'seconds' | 'percent' | null;
+  popupTriggerValue: number | null;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -30,7 +31,7 @@ export class Dashboard implements OnInit, OnDestroy {
   waLink = '';
   waButtonLabel = 'Chat on WhatsApp';
   caption = '';
-  popupTriggerType:  'seconds' | 'percent' | null = null;
+  popupTriggerType: 'seconds' | 'percent' | null = null;
   popupTriggerValue: number | null = null;
   previewFile: File | null = null;
   fullFile: File | null = null;
@@ -39,19 +40,22 @@ export class Dashboard implements OnInit, OnDestroy {
 
   /* UI state */
   isUploading = false;
+  isUploadingWithProgress = false;
+  uploadProgress = 0;
   uploadSuccess = false;
   errorMessage = '';
   campaigns: CampaignSummary[] = [];
 
   /* Edit mode state */
   editingSlug: string | null = null;
-  editForm = {
+  // FIX: Properly type the editForm
+  editForm: EditForm = {
     slug: '',
     caption: '',
     waLink: '',
     waButtonLabel: '',
-    popupTriggerType: null as 'seconds' | 'percent' | null,
-    popupTriggerValue: null as number | null
+    popupTriggerType: null,
+    popupTriggerValue: null
   };
   editFiles: { preview?: File; full?: File } = {};
   isSaving = false;
@@ -60,6 +64,7 @@ export class Dashboard implements OnInit, OnDestroy {
   private campaignSvc = inject(CampaignService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
+  private cdRef = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId) && !localStorage.getItem('auth_token')) {
@@ -83,30 +88,37 @@ export class Dashboard implements OnInit, OnDestroy {
     }
   }
 
-  /* ---------- Create ---------- */
+  /* ---------- Create with Progress Tracking ---------- */
   onSubmit(): void {
-    if (!this.slug || !this.waLink || !this.caption || !this.previewFile || !this.fullFile) {
+    if (!this.slug || !this.waLink || !this.caption || !this.fullFile) {
       this.errorMessage = 'All fields and files are required.';
       return;
     }
 
-    this.isUploading = true;
+    this.isUploadingWithProgress = true;
+    this.uploadProgress = 0;
     this.errorMessage = '';
 
-    this.campaignSvc
-      .upload(
-        this.slug,
-        this.waLink,
-        this.waButtonLabel,
-        this.caption,
-        this.popupTriggerType,
-        this.popupTriggerValue,
-        this.fullFile
-      )
-      .subscribe({
-        next: newCampaign => {
-          this.isUploading = false;
+    this.campaignSvc.uploadWithProgress(
+      this.slug,
+      this.waLink,
+      this.waButtonLabel,
+      this.caption,
+      this.popupTriggerType,
+      this.popupTriggerValue,
+      this.fullFile
+    ).subscribe({
+      next: (event: HttpEvent<any>) => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+          console.log(`Upload progress: ${this.uploadProgress}%`);
+        } else if (event.type === HttpEventType.Response) {
+          // Upload completed
+          this.isUploadingWithProgress = false;
           this.uploadSuccess = true;
+          this.uploadProgress = 0;
+          
+          const newCampaign = event.body;
           this.resetForm();
           this.campaigns.unshift({
             slug: newCampaign.slug,
@@ -114,19 +126,78 @@ export class Dashboard implements OnInit, OnDestroy {
             fullThumbnailUrl: newCampaign.fullThumbnailUrl,
             waLink: newCampaign.waLink,
             waButtonLabel: newCampaign.waButtonLabel,
-            popupTriggerType:  newCampaign.popupTriggerType,
+            popupTriggerType: newCampaign.popupTriggerType,
             popupTriggerValue: newCampaign.popupTriggerValue
           });
+          
           setTimeout(() => (this.uploadSuccess = false), 3000);
-        },
-        error: err => {
-          this.isUploading = false;
-          this.errorMessage = err.error?.message || 'Upload failed.';
         }
-      });
+      },
+      error: err => {
+        this.isUploadingWithProgress = false;
+        this.uploadProgress = 0;
+        this.errorMessage = err.error?.message || 'Upload failed.';
+        console.error('Upload error:', err);
+      }
+    });
   }
 
-  /* ---------- Read / Delete ---------- */
+  /* ---------- XMLHttpRequest Alternative ---------- */
+  onSubmitXHR(): void {
+    if (!this.slug || !this.waLink || !this.caption || !this.fullFile) {
+      this.errorMessage = 'All fields and files are required.';
+      return;
+    }
+
+    this.isUploadingWithProgress = true;
+    this.uploadProgress = 0;
+
+    const formData = new FormData();
+    formData.append('slug', this.slug);
+    formData.append('waLink', this.waLink);
+    formData.append('waButtonLabel', this.waButtonLabel);
+    formData.append('caption', this.caption);
+    if (this.popupTriggerType !== null) formData.append('popupTriggerType', this.popupTriggerType);
+    if (this.popupTriggerValue !== null) formData.append('popupTriggerValue', String(this.popupTriggerValue));
+    formData.append('full', this.fullFile);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+        this.cdRef.detectChanges();
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      this.isUploadingWithProgress = false;
+      this.uploadProgress = 0;
+
+      if (xhr.status === 201) {
+        const newCampaign = JSON.parse(xhr.responseText);
+        this.uploadSuccess = true;
+        this.resetForm();
+        this.campaigns.unshift(newCampaign);
+        setTimeout(() => (this.uploadSuccess = false), 3000);
+      } else {
+        const error = JSON.parse(xhr.responseText);
+        this.errorMessage = error.message || 'Upload failed';
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      this.isUploadingWithProgress = false;
+      this.uploadProgress = 0;
+      this.errorMessage = 'Network error during upload';
+    });
+
+    xhr.open('POST', `${this.campaignSvc.base}/campaigns/upload`);
+    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('auth_token')}`);
+    xhr.send(formData);
+  }
+
+  /* ---------- Rest of your existing methods ---------- */
   private loadCampaigns(): void {
     this.campaignSvc.listPublicLinks().subscribe(list => (this.campaigns = list));
   }
@@ -139,7 +210,6 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   }
 
-  /* ---------- Edit ---------- */
   openEdit(c: CampaignSummary): void {
     this.editingSlug = c.slug;
     this.editForm = {
@@ -199,15 +269,13 @@ export class Dashboard implements OnInit, OnDestroy {
       });
   }
 
-  /* ---------- Misc ---------- */
   private resetForm(): void {
     this.slug = this.waLink = this.waButtonLabel = this.caption = '';
     this.popupTriggerType = null;
     this.popupTriggerValue = null;
     this.previewFile = this.fullFile = null;
     this.previewUrl = this.fullUrl = null;
-    document
-      .querySelectorAll<HTMLInputElement>('input[type="file"]')
+    document.querySelectorAll<HTMLInputElement>('input[type="file"]')
       .forEach(el => (el.value = ''));
   }
 

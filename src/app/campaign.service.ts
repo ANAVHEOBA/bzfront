@@ -1,6 +1,6 @@
 // src/app/campaign.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
@@ -12,16 +12,11 @@ export interface CampaignDto {
   waLink: string;
   waButtonLabel: string;
   caption?: string;
-
-  /* popup timing */
   popupTriggerType:  'seconds' | 'percent' | null;
   popupTriggerValue: number | null;
-
   createdAt?: string;
   updatedAt?: string;
   _id?: string;
-
-  /* legacy fields – no longer returned by backend */
   snapVideoUrl?: string;
   snapThumbnailUrl?: string;
 }
@@ -30,10 +25,10 @@ export interface CampaignDto {
 @Injectable({ providedIn: 'root' })
 export class CampaignService {
   private http = inject(HttpClient);
-  private base = environment.apiUrl;
+  base = environment.apiUrl; // Make it public for XMLHttpRequest approach
 
   /* ----------------------------------------------------------
-   * Upload a new campaign – single full video only
+   * Original upload method (no progress)
    * ---------------------------------------------------------- */
   upload(
     slug: string,
@@ -58,6 +53,37 @@ export class CampaignService {
       headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
     });
   }
+
+  /* ----------------------------------------------------------
+   * NEW: Upload with progress tracking using HttpClient
+   * ---------------------------------------------------------- */
+  uploadWithProgress(
+    slug: string,
+    waLink: string,
+    waButtonLabel: string,
+    caption: string,
+    popupTriggerType:  'seconds' | 'percent' | null,
+    popupTriggerValue: number | null,
+    full: File
+  ): Observable<HttpEvent<any>> {
+    const token = localStorage.getItem('auth_token') ?? '';
+    const form = new FormData();
+    form.append('slug', slug);
+    form.append('waLink', waLink);
+    form.append('waButtonLabel', waButtonLabel);
+    form.append('caption', caption);
+    if (popupTriggerType  !== null) form.append('popupTriggerType',  popupTriggerType);
+    if (popupTriggerValue !== null) form.append('popupTriggerValue', String(popupTriggerValue));
+    form.append('full', full);
+
+    return this.http.post(`${this.base}/campaigns/upload`, form, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+      reportProgress: true,
+      observe: 'events'
+    });
+  }
+
+ 
 
   /* ----------------------------------------------------------
    * List public campaign links

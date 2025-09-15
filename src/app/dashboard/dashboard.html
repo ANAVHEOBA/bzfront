@@ -65,12 +65,10 @@
 
         <!-- File Uploads -->
         <div class="file-upload-group">
-          
-
           <div class="file-upload">
             <label>Full Resolution Image / Video *</label>
             <input type="file" accept="image/*,video/*"
-                   (change)="onFileSelected($event, 'full')" [disabled]="isUploading">
+                   (change)="onFileSelected($event, 'full')" [disabled]="isUploadingWithProgress">
             <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
             @if (fullUrl) {
               <div class="image-preview">
@@ -80,11 +78,32 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" [disabled]="isUploading">
-          @if (isUploading) {
-            <span class="spinner"></span> Uploading...
+        <!-- Progress Tracking -->
+        @if (isUploadingWithProgress) {
+          <div class="upload-progress">
+            <div class="progress-info">
+              <span>📤 Uploading... {{ uploadProgress }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+            </div>
+          </div>
+        }
+
+        <button type="submit" class="btn btn-primary" [disabled]="isUploadingWithProgress">
+          @if (isUploadingWithProgress) {
+            <span class="spinner"></span> Uploading... {{ uploadProgress }}%
           } @else {
             Upload Campaign
+          }
+        </button>
+
+        <!-- Alternative XHR Upload Button -->
+        <button type="button" class="btn btn-secondary" (click)="onSubmitXHR()" [disabled]="isUploadingWithProgress">
+          @if (isUploadingWithProgress) {
+            <span class="spinner"></span> Uploading... {{ uploadProgress }}%
+          } @else {
+            Upload (XHR Method)
           }
         </button>
       </form>
@@ -102,7 +121,6 @@
               </a>
               <p>{{ c.slug }}</p>
 
-              <!-- Delete / Edit -->
               <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
               <button class="btn btn-secondary" (click)="openEdit(c)">Edit</button>
 
@@ -134,12 +152,6 @@
                     <label>Value</label>
                     <input type="number" [(ngModel)]="editForm.popupTriggerValue" />
                   }
-
-                  <label>
-                    Replace Preview
-                    <input type="file" accept="image/*,video/*"
-                           (change)="onEditFile($event, 'preview')" />
-                  </label>
 
                   <label>
                     Replace Full
