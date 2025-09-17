@@ -63,21 +63,17 @@
           </div>
         }
 
-        <!-- File Uploads -->
-        <div class="file-upload-group">
-          
-
-          <div class="file-upload">
-            <label>Full Resolution Image / Video *</label>
-            <input type="file" accept="image/*,video/*"
-                   (change)="onFileSelected($event, 'full')" [disabled]="isUploading">
-            <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
-            @if (fullUrl) {
-              <div class="image-preview">
-                <img [src]="fullUrl" alt="Full">
-              </div>
-            }
-          </div>
+        <!-- File Upload -->
+        <div class="file-upload">
+          <label>Full Resolution Image / Video *</label>
+          <input type="file" accept="image/*,video/*"
+                 (change)="onFileSelected($event)" [disabled]="isUploading">
+          <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
+          @if (fullUrl) {
+            <div class="image-preview">
+              <img [src]="fullUrl" alt="Full">
+            </div>
+          }
         </div>
 
         <button type="submit" class="btn btn-primary" [disabled]="isUploading">
@@ -136,15 +132,9 @@
                   }
 
                   <label>
-                    Replace Preview
+                    Replace Full File
                     <input type="file" accept="image/*,video/*"
-                           (change)="onEditFile($event, 'preview')" />
-                  </label>
-
-                  <label>
-                    Replace Full
-                    <input type="file" accept="image/*,video/*"
-                           (change)="onEditFile($event, 'full')" />
+                           (change)="onEditFile($event)" />
                   </label>
 
                   <div class="edit-actions">

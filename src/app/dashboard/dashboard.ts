@@ -25,25 +25,23 @@ interface CampaignSummary
   styleUrls: ['./dashboard.scss']
 })
 export class Dashboard implements OnInit, OnDestroy {
-  /* Upload form fields */
+  /* ---------- Upload form fields ---------- */
   slug = '';
   waLink = '';
   waButtonLabel = 'Chat on WhatsApp';
   caption = '';
   popupTriggerType:  'seconds' | 'percent' | null = null;
   popupTriggerValue: number | null = null;
-  previewFile: File | null = null;
   fullFile: File | null = null;
-  previewUrl: string | null = null;
   fullUrl: string | null = null;
 
-  /* UI state */
+  /* ---------- UI state ---------- */
   isUploading = false;
   uploadSuccess = false;
   errorMessage = '';
   campaigns: CampaignSummary[] = [];
 
-  /* Edit mode state */
+  /* ---------- Edit mode state ---------- */
   editingSlug: string | null = null;
   editForm = {
     slug: '',
@@ -53,7 +51,7 @@ export class Dashboard implements OnInit, OnDestroy {
     popupTriggerType: null as 'seconds' | 'percent' | null,
     popupTriggerValue: null as number | null
   };
-  editFiles: { preview?: File; full?: File } = {};
+  editFile: File | null = null;          // only full file can be replaced
   isSaving = false;
   editError = '';
 
@@ -70,22 +68,16 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   /* ---------- File handling ---------- */
-  onFileSelected(event: Event, type: 'preview' | 'full'): void {
+  onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (type === 'preview') {
-      if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-      this.previewFile = file;
-      this.previewUrl = file ? URL.createObjectURL(file) : null;
-    } else {
-      if (this.fullUrl) URL.revokeObjectURL(this.fullUrl);
-      this.fullFile = file;
-      this.fullUrl = file ? URL.createObjectURL(file) : null;
-    }
+    if (this.fullUrl) URL.revokeObjectURL(this.fullUrl);
+    this.fullFile = file;
+    this.fullUrl = file ? URL.createObjectURL(file) : null;
   }
 
   /* ---------- Create ---------- */
   onSubmit(): void {
-    if (!this.slug || !this.waLink || !this.caption || !this.previewFile || !this.fullFile) {
+    if (!this.slug || !this.waLink || !this.caption || !this.fullFile) {
       this.errorMessage = 'All fields and files are required.';
       return;
     }
@@ -150,7 +142,7 @@ export class Dashboard implements OnInit, OnDestroy {
       popupTriggerType: c.popupTriggerType,
       popupTriggerValue: c.popupTriggerValue
     };
-    this.editFiles = {};
+    this.editFile = null;
     this.editError = '';
   }
 
@@ -159,9 +151,9 @@ export class Dashboard implements OnInit, OnDestroy {
     this.editError = '';
   }
 
-  onEditFile(event: Event, type: 'preview' | 'full'): void {
+  onEditFile(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) this.editFiles[type] = file;
+    if (file) this.editFile = file;
   }
 
   saveEdit(): void {
@@ -174,7 +166,7 @@ export class Dashboard implements OnInit, OnDestroy {
       .update(
         this.editingSlug,
         this.editForm,
-        this.editFiles.full
+        this.editFile ?? undefined
       )
       .subscribe({
         next: updated => {
@@ -204,8 +196,8 @@ export class Dashboard implements OnInit, OnDestroy {
     this.slug = this.waLink = this.waButtonLabel = this.caption = '';
     this.popupTriggerType = null;
     this.popupTriggerValue = null;
-    this.previewFile = this.fullFile = null;
-    this.previewUrl = this.fullUrl = null;
+    this.fullFile = null;
+    this.fullUrl = null;
     document
       .querySelectorAll<HTMLInputElement>('input[type="file"]')
       .forEach(el => (el.value = ''));
@@ -219,7 +211,6 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
     if (this.fullUrl) URL.revokeObjectURL(this.fullUrl);
   }
 }
