@@ -1,4 +1,3 @@
-<!-- src/app/dashboard/dashboard.html -->
 <div class="dashboard-layout">
   <div class="dashboard-container">
     <header class="dashboard-header">
@@ -25,8 +24,8 @@
 
         <div class="form-group">
           <label for="waLink">WhatsApp Link *</label>
-          <input type="url" id="waLink" [(ngModel)]="waLink" name="waLink" required
-                 placeholder="https://wa.me/1234567890">
+          <input type="text" id="waLink" [(ngModel)]="waLink" name="waLink" required
+       placeholder="e.g., https://wa.me/1234567890 or https://earn.superteam.fun/...">
         </div>
 
         <div class="form-group">
@@ -41,7 +40,7 @@
                     rows="3" placeholder="Enter campaign description..."></textarea>
         </div>
 
-        <!-- NEW: Popup Timing -->
+        <!-- Popup Timing -->
         <div class="form-group">
           <label for="popupTriggerType">Popup Trigger</label>
           <select id="popupTriggerType" [(ngModel)]="popupTriggerType" name="popupTriggerType">
@@ -64,31 +63,17 @@
           </div>
         }
 
-        <!-- File Uploads -->
-        <div class="file-upload-group">
-          <div class="file-upload">
-            <label>Preview Image / Video (Small) *</label>
-            <input type="file" accept="image/*,video/*"
-                   (change)="onFileSelected($event, 'preview')" [disabled]="isUploading">
-            <span class="file-name">{{ previewFile?.name || 'No file selected' }}</span>
-            @if (previewUrl) {
-              <div class="image-preview">
-                <img [src]="previewUrl" alt="Preview">
-              </div>
-            }
-          </div>
-
-          <div class="file-upload">
-            <label>Full Resolution Image / Video *</label>
-            <input type="file" accept="image/*,video/*"
-                   (change)="onFileSelected($event, 'full')" [disabled]="isUploading">
-            <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
-            @if (fullUrl) {
-              <div class="image-preview">
-                <img [src]="fullUrl" alt="Full">
-              </div>
-            }
-          </div>
+        <!-- File Upload -->
+        <div class="file-upload">
+          <label>Full Resolution Image / Video *</label>
+          <input type="file" accept="image/*,video/*"
+                 (change)="onFileSelected($event)" [disabled]="isUploading">
+          <span class="file-name">{{ fullFile?.name || 'No file selected' }}</span>
+          @if (fullUrl) {
+            <div class="image-preview">
+              <img [src]="fullUrl" alt="Full">
+            </div>
+          }
         </div>
 
         <button type="submit" class="btn btn-primary" [disabled]="isUploading">
@@ -112,7 +97,59 @@
                 <img [src]="c.fullThumbnailUrl" [alt]="c.slug" loading="lazy" />
               </a>
               <p>{{ c.slug }}</p>
+
+              <!-- Delete / Edit -->
               <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
+              <button class="btn btn-secondary" (click)="openEdit(c)">Edit</button>
+
+              <!-- Inline Edit Panel -->
+              @if (editingSlug === c.slug) {
+                <div class="edit-panel">
+                  <h4>Edit {{ c.slug }}</h4>
+
+                  <label>Slug</label>
+                  <input [(ngModel)]="editForm.slug" name="editSlug" />
+
+                  <label>Caption</label>
+                  <textarea [(ngModel)]="editForm.caption" rows="2"></textarea>
+
+                  <label>WhatsApp Link</label>
+                  <input [(ngModel)]="editForm.waLink" name="editWaLink" />
+
+                  <label>WhatsApp Button Text</label>
+                  <input [(ngModel)]="editForm.waButtonLabel" />
+
+                  <label>Popup Trigger</label>
+                  <select [(ngModel)]="editForm.popupTriggerType">
+                    <option [ngValue]="null">None</option>
+                    <option value="seconds">Seconds</option>
+                    <option value="percent">Percent</option>
+                  </select>
+
+                  @if (editForm.popupTriggerType) {
+                    <label>Value</label>
+                    <input type="number" [(ngModel)]="editForm.popupTriggerValue" />
+                  }
+
+                  <label>
+                    Replace Full File
+                    <input type="file" accept="image/*,video/*"
+                           (change)="onEditFile($event)" />
+                  </label>
+
+                  <div class="edit-actions">
+                    <button class="btn btn-primary" [disabled]="isSaving"
+                            (click)="saveEdit()">
+                      {{ isSaving ? 'Saving...' : 'Save' }}
+                    </button>
+                    <button class="btn btn-outline" (click)="cancelEdit()">Cancel</button>
+                  </div>
+
+                  @if (editError) {
+                    <div class="notification error">{{ editError }}</div>
+                  }
+                </div>
+              }
             </div>
           }
         </div>

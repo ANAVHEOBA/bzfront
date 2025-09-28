@@ -70,8 +70,8 @@
             },
             "development": {
               "buildTarget": "bzfront:build:development",
-              "host": "0.0.0.0",
-              "disableHostCheck": true
+              "host": "0.0.0.0"
+            
             }
           },
           "defaultConfiguration": "development"

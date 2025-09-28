@@ -8,6 +8,6 @@ export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: Dashboard },
-  { path: 'campaigns/:slug', component: CampaignLandingComponent },
+  { path: 'campaigns/:slug', component: CampaignLandingComponent }, // keep only this one
   { path: '**', redirectTo: '/login' }
 ];

@@ -21,7 +21,7 @@ export class CampaignLandingComponent implements OnInit {
   campaign?: CampaignDto;
   isLoading = true;
   error?: string;
-  showFull = false;
+  showFull = true;   // campaign-landing.ts
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');

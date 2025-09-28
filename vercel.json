@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/campaigns/:slug*", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
