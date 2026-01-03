@@ -38,10 +38,10 @@ export class CampaignLandingComponent implements OnInit {
 
         // Set SSR-friendly meta tags for social previews
         this.meta.set({
-          title: c.slug,
+          title: slug,
           description: c.caption || '',
           image: c.fullThumbnailUrl.trim(),
-          url: `https://bzfront.vercel.app/campaigns/${encodeURIComponent(c.slug)}`
+          url: `https://bzfront.vercel.app/campaigns/${encodeURIComponent(slug)}`
         });
       },
       error: (err) => {
