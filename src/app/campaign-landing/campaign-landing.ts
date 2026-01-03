@@ -21,7 +21,7 @@ export class CampaignLandingComponent implements OnInit {
   campaign?: CampaignDto;
   isLoading = true;
   error?: string;
-  showFull = true;   // campaign-landing.ts
+  showFull = true;
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
@@ -32,7 +32,7 @@ export class CampaignLandingComponent implements OnInit {
     }
 
     this.campaignSvc.getCampaign(slug).subscribe({
-      next: (c) => {
+      next: (c: CampaignDto) => {
         this.campaign = c;
         this.isLoading = false;
 
@@ -44,7 +44,7 @@ export class CampaignLandingComponent implements OnInit {
           url: `https://bzfront.vercel.app/campaigns/${encodeURIComponent(slug)}`
         });
       },
-      error: (err) => {
+      error: (err: { error?: { message?: string } }) => {
         this.error = err.error?.message || 'Campaign not found';
         this.isLoading = false;
       }
