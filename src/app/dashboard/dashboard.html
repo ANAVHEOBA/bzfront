@@ -2,7 +2,10 @@
   <div class="dashboard-container">
     <header class="dashboard-header">
       <h1>Campaign Dashboard</h1>
-      <button (click)="logout()" class="btn btn-logout">Logout</button>
+      <div class="header-actions">
+        <a routerLink="/analytics" class="btn btn-secondary">Analytics</a>
+        <button (click)="logout()" class="btn btn-logout">Logout</button>
+      </div>
     </header>
 
     @if (uploadSuccess) {
@@ -38,6 +41,12 @@
           <label for="caption">Caption *</label>
           <textarea id="caption" [(ngModel)]="caption" name="caption" required
                     rows="3" placeholder="Enter campaign description..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags</label>
+          <input type="text" id="tags" [(ngModel)]="tagsInput" name="tags"
+                 placeholder="e.g., promo, sale, summer (comma-separated)">
         </div>
 
         <!-- Popup Timing -->
@@ -98,9 +107,12 @@
               </a>
               <p>{{ c.slug }}</p>
 
-              <!-- Delete / Edit -->
-              <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
-              <button class="btn btn-secondary" (click)="openEdit(c)">Edit</button>
+              <!-- Actions -->
+              <div class="campaign-actions">
+                <button class="btn btn-share" (click)="openShareLinks(c.slug)">Share</button>
+                <button class="btn btn-secondary" (click)="openEdit(c)">Edit</button>
+                <button class="btn btn-danger" (click)="deleteCampaign(c.slug)">Delete</button>
+              </div>
 
               <!-- Inline Edit Panel -->
               @if (editingSlug === c.slug) {
@@ -118,6 +130,10 @@
 
                   <label>WhatsApp Button Text</label>
                   <input [(ngModel)]="editForm.waButtonLabel" />
+
+                  <label>Tags</label>
+                  <input [(ngModel)]="editForm.tagsInput" name="editTags"
+                         placeholder="e.g., promo, sale, summer (comma-separated)" />
 
                   <label>Popup Trigger</label>
                   <select [(ngModel)]="editForm.popupTriggerType">
@@ -157,5 +173,38 @@
         <p class="empty-state">No campaigns uploaded yet</p>
       }
     </div>
+
+    <!-- Share Links Modal -->
+    @if (shareLinksData || shareLinksLoading) {
+      <div class="modal-overlay" (click)="closeShareLinks()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <button class="modal-close" (click)="closeShareLinks()">&times;</button>
+
+          @if (shareLinksLoading) {
+            <div class="loading">Loading share links...</div>
+          }
+
+          @if (shareLinksError) {
+            <div class="notification error">{{ shareLinksError }}</div>
+          }
+
+          @if (shareLinksData && !shareLinksLoading) {
+            <h2>Share: {{ shareLinksData.campaignSlug }}</h2>
+
+            <div class="share-links-list">
+              @for (platform of shareLinksData.platforms; track platform.name) {
+                <div class="share-link-item">
+                  <span class="platform-label">{{ platform.label }}</span>
+                  <div class="link-row">
+                    <input type="text" [value]="platform.url" readonly />
+                    <button class="btn btn-copy" (click)="copyLink(platform.url)">Copy</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
   </div>
 </div>

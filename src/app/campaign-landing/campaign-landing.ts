@@ -1,10 +1,11 @@
 // src/app/campaign-landing/campaign-landing.ts
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 import { CampaignService, CampaignDto } from '../campaign.service';
 import { MetaTagsService } from '../meta-tags.service';
+import { TrackingService } from '../tracking.service';
 
 @Component({
   selector: 'app-campaign-landing',
@@ -17,11 +18,16 @@ export class CampaignLandingComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private campaignSvc = inject(CampaignService);
   private meta = inject(MetaTagsService);
+  private trackingSvc = inject(TrackingService);
+  private platformId = inject(PLATFORM_ID);
 
   campaign?: CampaignDto;
   isLoading = true;
   error?: string;
   showFull = true;
+
+  private hasTrackedPlay = false;
+  private hasTrackedComplete = false;
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
@@ -43,6 +49,11 @@ export class CampaignLandingComponent implements OnInit {
           image: c.fullThumbnailUrl.trim(),
           url: `https://bzfront.vercel.app/campaigns/${encodeURIComponent(slug)}`
         });
+
+        // Track page view (only in browser)
+        if (isPlatformBrowser(this.platformId)) {
+          this.trackingSvc.trackView(slug).subscribe();
+        }
       },
       error: (err: { error?: { message?: string } }) => {
         this.error = err.error?.message || 'Campaign not found';
@@ -53,5 +64,22 @@ export class CampaignLandingComponent implements OnInit {
 
   switchToFull(): void {
     this.showFull = true;
+  }
+
+  onVideoPlay(): void {
+    if (this.hasTrackedPlay || !this.campaign) return;
+    this.hasTrackedPlay = true;
+    this.trackingSvc.trackPlay(this.campaign.slug).subscribe();
+  }
+
+  onVideoEnded(): void {
+    if (this.hasTrackedComplete || !this.campaign) return;
+    this.hasTrackedComplete = true;
+    this.trackingSvc.trackComplete(this.campaign.slug).subscribe();
+  }
+
+  onCtaClick(): void {
+    if (!this.campaign) return;
+    this.trackingSvc.trackClick(this.campaign.slug).subscribe();
   }
 }

@@ -17,6 +17,9 @@ export interface CampaignDto {
   popupTriggerType:  'seconds' | 'percent' | null;
   popupTriggerValue: number | null;
 
+  /* tags */
+  tags?: string[];
+
   createdAt?: string;
   updatedAt?: string;
   _id?: string;
@@ -42,7 +45,8 @@ export class CampaignService {
     caption: string,
     popupTriggerType:  'seconds' | 'percent' | null,
     popupTriggerValue: number | null,
-    full: File
+    full: File,
+    tags?: string[]
   ): Observable<CampaignDto> {
     const token = localStorage.getItem('auth_token') ?? '';
     const form = new FormData();
@@ -52,6 +56,7 @@ export class CampaignService {
     form.append('caption', caption);
     if (popupTriggerType  !== null) form.append('popupTriggerType',  popupTriggerType);
     if (popupTriggerValue !== null) form.append('popupTriggerValue', String(popupTriggerValue));
+    if (tags && tags.length > 0) form.append('tags', JSON.stringify(tags));
     form.append('full', full);
 
     return this.http.post<CampaignDto>(`${this.base}/campaigns/upload`, form, {
@@ -64,12 +69,12 @@ export class CampaignService {
    * ---------------------------------------------------------- */
   listPublicLinks(): Observable<
     Pick<CampaignDto,
-      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+      'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'tags'
     >[]
   > {
     return this.http.get<
       Pick<CampaignDto,
-        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue'
+        'slug' | 'fullVideoUrl' | 'fullThumbnailUrl' | 'waLink' | 'waButtonLabel' | 'popupTriggerType' | 'popupTriggerValue' | 'tags'
       >[]
     >(`${this.base}/campaigns/public/links`);
   }
@@ -106,6 +111,7 @@ export class CampaignService {
         | 'caption'
         | 'popupTriggerType'
         | 'popupTriggerValue'
+        | 'tags'
       >
     >,
     full?: File
@@ -125,7 +131,9 @@ export class CampaignService {
     /* Form-data with video replacement */
     const form = new FormData();
     Object.entries(changes).forEach(([k, v]) => {
-      if (v !== null && v !== undefined) form.append(k, v.toString());
+      if (v !== null && v !== undefined) {
+        form.append(k, Array.isArray(v) ? JSON.stringify(v) : v.toString());
+      }
     });
     form.append('full', full);
 

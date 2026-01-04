@@ -1,0 +1,160 @@
+<div class="analytics-layout">
+  <div class="analytics-container">
+    <header class="analytics-header">
+      <h1>Campaign Analytics</h1>
+      <button (click)="goBack()" class="btn btn-outline">Back to Dashboard</button>
+    </header>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="notification error">{{ error }}</div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading">Loading analytics...</div>
+
+    <!-- Campaign Analytics Table -->
+    <div *ngIf="!isLoading && campaigns.length" class="card">
+      <h2>All Campaigns</h2>
+      <div class="table-wrapper">
+        <table class="analytics-table">
+          <thead>
+            <tr>
+              <th>Campaign</th>
+              <th>Views</th>
+              <th>Plays</th>
+              <th>Completes</th>
+              <th>Clicks</th>
+              <th>Conversion</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of campaigns">
+              <td class="campaign-slug">{{ c.campaignSlug }}</td>
+              <td>{{ c.views | number }}</td>
+              <td>{{ c.plays | number }}</td>
+              <td>{{ c.completes | number }}</td>
+              <td>{{ c.clicks | number }}</td>
+              <td class="conversion">{{ c.conversionRate | number:'1.1-2' }}%</td>
+              <td>
+                <button class="btn btn-sm btn-primary" (click)="viewDetails(c.campaignSlug)">
+                  Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && !campaigns.length && !error" class="card empty-state">
+      <p>No analytics data available yet.</p>
+    </div>
+
+    <!-- Campaign Detail Modal -->
+    <div *ngIf="selectedCampaign || detailLoading" class="modal-overlay" (click)="closeDetails()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeDetails()">&times;</button>
+
+        <div *ngIf="detailLoading" class="loading">Loading details...</div>
+        <div *ngIf="detailError" class="notification error">{{ detailError }}</div>
+
+        <div *ngIf="selectedCampaign && !detailLoading">
+          <h2>{{ selectedCampaign.campaignSlug }}</h2>
+
+          <!-- Summary Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-value">{{ selectedCampaign.totalViews | number }}</span>
+              <span class="stat-label">Total Views</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value">{{ selectedCampaign.totalPlays | number }}</span>
+              <span class="stat-label">Total Plays</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value">{{ selectedCampaign.totalCompletes | number }}</span>
+              <span class="stat-label">Completes</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value">{{ selectedCampaign.totalClicks | number }}</span>
+              <span class="stat-label">CTA Clicks</span>
+            </div>
+            <div class="stat-card highlight">
+              <span class="stat-value">{{ selectedCampaign.conversionRate | number:'1.1-2' }}%</span>
+              <span class="stat-label">Conversion Rate</span>
+            </div>
+          </div>
+
+          <!-- Date Filter -->
+          <div class="date-filter">
+            <label>
+              Start Date
+              <input type="date" [(ngModel)]="startDate" />
+            </label>
+            <label>
+              End Date
+              <input type="date" [(ngModel)]="endDate" />
+            </label>
+            <button class="btn btn-sm btn-primary" (click)="applyDateFilter()">Apply</button>
+            <button class="btn btn-sm btn-outline" (click)="clearDateFilter()">Clear</button>
+          </div>
+
+          <!-- By Source -->
+          <div *ngIf="selectedCampaign.bySource" class="section">
+            <h3>Traffic by Source</h3>
+            <div class="table-wrapper">
+              <table class="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th>Views</th>
+                    <th>Plays</th>
+                    <th>Completes</th>
+                    <th>Clicks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let source of getSourceKeys(selectedCampaign.bySource)">
+                    <td class="source-name">{{ source }}</td>
+                    <td>{{ selectedCampaign.bySource[source].views | number }}</td>
+                    <td>{{ selectedCampaign.bySource[source].plays | number }}</td>
+                    <td>{{ selectedCampaign.bySource[source].completes | number }}</td>
+                    <td>{{ selectedCampaign.bySource[source].clicks | number }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- By Date -->
+          <div *ngIf="selectedCampaign.byDate?.length" class="section">
+            <h3>Performance by Date</h3>
+            <div class="table-wrapper">
+              <table class="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Views</th>
+                    <th>Plays</th>
+                    <th>Completes</th>
+                    <th>Clicks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let day of selectedCampaign.byDate">
+                    <td>{{ day.date }}</td>
+                    <td>{{ day.views | number }}</td>
+                    <td>{{ day.plays | number }}</td>
+                    <td>{{ day.completes | number }}</td>
+                    <td>{{ day.clicks | number }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

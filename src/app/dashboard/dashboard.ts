@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { CampaignService, CampaignDto } from '../campaign.service';
 import { RouterModule } from '@angular/router';
+import { TrackingService, ShareLinksResponse } from '../tracking.service';
 
 interface CampaignSummary
   extends Pick<CampaignDto,
@@ -15,6 +16,7 @@ interface CampaignSummary
     | 'popupTriggerType'
     | 'popupTriggerValue'
     | 'caption'
+    | 'tags'
   > {}
 
 @Component({
@@ -30,6 +32,7 @@ export class Dashboard implements OnInit, OnDestroy {
   waLink = '';
   waButtonLabel = 'Chat on WhatsApp';
   caption = '';
+  tagsInput = '';
   popupTriggerType:  'seconds' | 'percent' | null = null;
   popupTriggerValue: number | null = null;
   fullFile: File | null = null;
@@ -48,6 +51,7 @@ export class Dashboard implements OnInit, OnDestroy {
     caption: '',
     waLink: '',
     waButtonLabel: '',
+    tagsInput: '',
     popupTriggerType: null as 'seconds' | 'percent' | null,
     popupTriggerValue: null as number | null
   };
@@ -56,8 +60,14 @@ export class Dashboard implements OnInit, OnDestroy {
   editError = '';
 
   private campaignSvc = inject(CampaignService);
+  private trackingSvc = inject(TrackingService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
+
+  /* ---------- Share links state ---------- */
+  shareLinksData: ShareLinksResponse | null = null;
+  shareLinksLoading = false;
+  shareLinksError = '';
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId) && !localStorage.getItem('auth_token')) {
@@ -85,6 +95,11 @@ export class Dashboard implements OnInit, OnDestroy {
     this.isUploading = true;
     this.errorMessage = '';
 
+    const tags = this.tagsInput
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
     this.campaignSvc
       .upload(
         this.slug,
@@ -93,7 +108,8 @@ export class Dashboard implements OnInit, OnDestroy {
         this.caption,
         this.popupTriggerType,
         this.popupTriggerValue,
-        this.fullFile
+        this.fullFile,
+        tags.length > 0 ? tags : undefined
       )
       .subscribe({
         next: newCampaign => {
@@ -107,7 +123,8 @@ export class Dashboard implements OnInit, OnDestroy {
             waLink: newCampaign.waLink,
             waButtonLabel: newCampaign.waButtonLabel,
             popupTriggerType:  newCampaign.popupTriggerType,
-            popupTriggerValue: newCampaign.popupTriggerValue
+            popupTriggerValue: newCampaign.popupTriggerValue,
+            tags: newCampaign.tags
           });
           setTimeout(() => (this.uploadSuccess = false), 3000);
         },
@@ -139,6 +156,7 @@ export class Dashboard implements OnInit, OnDestroy {
       caption: c.caption ?? '',
       waLink: c.waLink ?? '',
       waButtonLabel: c.waButtonLabel,
+      tagsInput: (c.tags ?? []).join(', '),
       popupTriggerType: c.popupTriggerType,
       popupTriggerValue: c.popupTriggerValue
     };
@@ -162,10 +180,25 @@ export class Dashboard implements OnInit, OnDestroy {
     this.isSaving = true;
     this.editError = '';
 
+    const tags = this.editForm.tagsInput
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+
+    const changes = {
+      slug: this.editForm.slug,
+      caption: this.editForm.caption,
+      waLink: this.editForm.waLink,
+      waButtonLabel: this.editForm.waButtonLabel,
+      popupTriggerType: this.editForm.popupTriggerType,
+      popupTriggerValue: this.editForm.popupTriggerValue,
+      tags
+    };
+
     this.campaignSvc
       .update(
         this.editingSlug,
-        this.editForm,
+        changes,
         this.editFile ?? undefined
       )
       .subscribe({
@@ -179,7 +212,8 @@ export class Dashboard implements OnInit, OnDestroy {
               waLink: updated.waLink,
               waButtonLabel: updated.waButtonLabel,
               popupTriggerType: updated.popupTriggerType,
-              popupTriggerValue: updated.popupTriggerValue
+              popupTriggerValue: updated.popupTriggerValue,
+              tags: updated.tags
             };
           }
           this.cancelEdit();
@@ -193,7 +227,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   /* ---------- Misc ---------- */
   private resetForm(): void {
-    this.slug = this.waLink = this.waButtonLabel = this.caption = '';
+    this.slug = this.waLink = this.waButtonLabel = this.caption = this.tagsInput = '';
     this.popupTriggerType = null;
     this.popupTriggerValue = null;
     this.fullFile = null;
@@ -208,6 +242,37 @@ export class Dashboard implements OnInit, OnDestroy {
       localStorage.removeItem('auth_token');
     }
     this.router.navigate(['/login']);
+  }
+
+  /* ---------- Share Links ---------- */
+  openShareLinks(slug: string): void {
+    this.shareLinksLoading = true;
+    this.shareLinksError = '';
+    this.shareLinksData = null;
+
+    this.trackingSvc.getShareLinks(slug).subscribe({
+      next: data => {
+        this.shareLinksData = data;
+        this.shareLinksLoading = false;
+      },
+      error: err => {
+        this.shareLinksError = err.error?.message || 'Failed to load share links';
+        this.shareLinksLoading = false;
+      }
+    });
+  }
+
+  closeShareLinks(): void {
+    this.shareLinksData = null;
+    this.shareLinksError = '';
+  }
+
+  copyLink(url: string): void {
+    if (isPlatformBrowser(this.platformId)) {
+      navigator.clipboard.writeText(url).then(() => {
+        // Optionally show a brief "Copied!" feedback
+      });
+    }
   }
 
   ngOnDestroy(): void {

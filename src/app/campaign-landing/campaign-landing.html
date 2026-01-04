@@ -13,13 +13,16 @@
         controls
         autoplay
         playsinline
-        preload="metadata">
+        preload="metadata"
+        (play)="onVideoPlay()"
+        (ended)="onVideoEnded()">
         Your browser does not support the video tag.
       </video>
     </div>
 
     <!-- Dynamic WhatsApp button -->
-    <a class="wa-btn" [href]="campaign.waLink" target="_blank" rel="noopener">
+    <a class="wa-btn" [href]="campaign.waLink" target="_blank" rel="noopener"
+       (click)="onCtaClick()">
       {{ campaign.waButtonLabel }}
     </a>
   </div>
